@@ -1,0 +1,9 @@
+PORT=3000
+DB_CLIENT=mysql2
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=root
+DB_NAME=av_api
+JWT_SECRET=sua_chave_secreta_super_segura
+JWT_EXPIRES=2h
+BCRYPT_ROUNDS=10
