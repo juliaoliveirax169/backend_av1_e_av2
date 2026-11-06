@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos | Aqua</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <a class="navbar-brand" href="index.html">AQUA.</a>
+        <nav>
+            <a class="nav-link" href="index.html">Minha Conta</a>
+            <a class="nav-link" href="#" onclick="logout()">Sair</a>
+        </nav>
+    </header>
+
+    <main class="produtos-main">
+        <h1 style="margin-bottom: 20px;">Nossos Produtos</h1>
+
+        <!-- Área de Filtros -->
+        <section class="filtros-container">
+            <div class="campo">
+                <label for="f-nome">Buscar</label>
+                <input class="input_texto" type="text" id="f-nome" placeholder="Nome do produto...">
+            </div>
+
+            <div class="campo">
+                <label for="f-categoria">Categoria</label>
+                <select class="input_texto" id="f-categoria">
+                    <option value="">Todas</option>
+                    <option value="smartphone">Smartphone</option>
+                    <option value="audio">Áudio</option>
+                    <option value="tv">TV</option>
+                    <option value="monitor">Monitor</option>
+                    <option value="periferico">Periférico</option>
+                    <option value="fotografia">Fotografia</option>
+                    <option value="wearable">Wearable</option>
+                    <option value="e-reader">E-reader</option>
+                </select>
+            </div>
+
+            <div class="campo">
+                <label for="f-ordem">Ordenar por</label>
+                <select class="input_texto" id="f-ordem">
+                    <option value="">Padrão</option>
+                    <option value="menor">Menor Preço</option>
+                    <option value="maior">Maior Preço</option>
+                </select>
+            </div>
+
+            <div class="campo">
+                <label>Preço Mín/Máx</label>
+                <div style="display: flex; gap: 10px;">
+                    <input class="input_texto" type="number" id="f-min" placeholder="R$ 0">
+                    <input class="input_texto" type="number" id="f-max" placeholder="R$ 9999">
+                </div>
+            </div>
+
+            <button class="btn_enviar" style="width: auto; padding: 13px 30px;" onclick="buscarProdutos(1)">Filtrar</button>
+        </section>
+
+        <!-- Grid de Produtos -->
+        <section id="lista-produtos" class="grid-produtos">
+            <p style="color: var(--cinza); text-align: center; grid-column: 1/-1;">Carregando produtos...</p>
+        </section>
+
+        <!-- Paginação -->
+        <section class="paginacao">
+            <button id="btn-ant" class="btn_enviar" onclick="mudarPagina(-1)">Anterior</button>
+            <span id="info-pag" style="color: var(--cinza); font-weight: bold;">Página 1</span>
+            <button id="btn-prox" class="btn_enviar" onclick="mudarPagina(1)">Próxima</button>
+        </section>
+    </main>
+
+    <script src="pages.js"></script>
+    <script>
+        let paginaAtual = 1;
+        let totalPaginas = 1;
+
+        // Proteção da rota: Se não tem token, vai para o login
+        if (!localStorage.getItem("token")) {
+            window.location.replace("login.html");
+        }
+
+        // Função de buscar produtos na API (com filtros e paginação)
+        async function buscarProdutos(pagina) {
+            paginaAtual = pagina;
+            
+            const nome = document.getElementById("f-nome").value;
+            const categoria = document.getElementById("f-categoria").value;
+            const ordem = document.getElementById("f-ordem").value;
+            const preco_min = document.getElementById("f-min").value;
+            const preco_max = document.getElementById("f-max").value;
+
+            // Monta os Query Parameters
+            const params = new URLSearchParams();
+            if (nome) params.append("nome", nome);
+            if (categoria) params.append("categoria", categoria);
+            if (ordem) params.append("ordem", ordem);
+            if (preco_min) params.append("preco_min", preco_min);
+            if (preco_max) params.append("preco_max", preco_max);
+            params.append("pagina", paginaAtual);
+
+            try {
+                const res = await fetch(`${API}/produto?${params.toString()}`);
+                const data = await res.json();
+
+                totalPaginas = data.meta.total_paginas;
+                renderizar(data.dados);
+                atualizarBotoes();
+
+            } catch (error) {
+                document.getElementById("lista-produtos").innerHTML = 
+                    `<p style="color: red; grid-column: 1/-1;">Erro ao carregar produtos.</p>`;
+            }
+        }
+
+        // Renderiza os cards na tela
+        function renderizar(produtos) {
+            const container = document.getElementById("lista-produtos");
+            container.innerHTML = "";
+
+            if (produtos.length === 0) {
+                container.innerHTML = `<p style="color: var(--cinza); grid-column: 1/-1; text-align: center;">Nenhum produto encontrado.</p>`;
+                return;
+            }
+
+            produtos.forEach(p => {
+                const valor = Number(p.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                container.innerHTML += `
+                    <div class="card-produto">
+                        <div>
+                            <h3>${p.nome}</h3>
+                            <span class="tag">${p.categoria}</span>
+                        </div>
+                        <div class="preco">${valor}</div>
+                    </div>
+                `;
+            });
+        }
+
+        // Atualiza o estado dos botões de paginação
+        function atualizarBotoes() {
+            document.getElementById("info-pag").innerText = `Página ${paginaAtual} de ${totalPaginas || 1}`;
+            document.getElementById("btn-ant").disabled = paginaAtual <= 1;
+            document.getElementById("btn-prox").disabled = paginaAtual >= totalPaginas;
+        }
+
+        // Muda de página
+        function mudarPagina(direcao) {
+            const nova = paginaAtual + direcao;
+            if (nova >= 1 && nova <= totalPaginas) {
+                buscarProdutos(nova);
+            }
+        }
+
+        // Carrega os produtos ao abrir a página
+        window.onload = () => buscarProdutos(1);
+    </script>
+</body>
+</html>
