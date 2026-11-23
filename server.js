@@ -5,6 +5,7 @@ import db from './db.js';
 import clienteRoutes from './routes/cliente.js';
 import loginRoutes from './routes/login.js';
 import produtoRoutes from './routes/produto.js';
+import comprasRoutes from './routes/compras.js';
 
 const app = express();
 app.use(express.json());
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use('/cliente', clienteRoutes);
 app.use('/login', loginRoutes);
 app.use('/produto', produtoRoutes);
+app.use('/compras', comprasRoutes);
 
 const PORT = process.env.PORT || 3000;
 
