@@ -19,12 +19,6 @@ export async function up(knex) {
       imagem_url: 'https://drive.google.com/uc?export=view&id=1qQ-uskr9sSnOCMeF4qugzsQnGVn-FFXU' 
     },
     { 
-      nome: 'Headset Gamer HyperX', 
-      categoria: 'audio', 
-      preco: 450.00, 
-      imagem_url: 'https://drive.google.com/uc?export=view&id=1pLTAZ_EQrRbrDyvFn4Vo10-hZLHQdtuP' // <-- Lembre-se de trocar por um link único se quiser
-    },
-    { 
       nome: 'Smart TV 55" 4K', 
       categoria: 'tv', 
       preco: 2799.00, 
