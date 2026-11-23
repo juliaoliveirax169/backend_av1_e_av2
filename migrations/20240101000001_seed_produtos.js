@@ -12,11 +12,11 @@ export async function up(knex) {
       preco: 8999.00, 
       imagem_url: 'https://drive.google.com/uc?export=view&id=1pLTAZ_EQrRbrDyvFn4Vo10-hZLHQdtuP' 
     },
-    { 
-      nome: 'Fone Bluetooth JBL', 
+        { 
+      nome: 'Headset Gamer HyperX', 
       categoria: 'audio', 
-      preco: 299.90, 
-      imagem_url: 'https://drive.google.com/uc?export=view&id=1k4oESlqGMWn1T7SDnjFvqjqrVjEKwVj' 
+      preco: 450.00, 
+      imagem_url: 'https://drive.google.com/uc?export=view&id=1qQ-uskr9sSnOCMeF4qugzsQnGVn-FFXU' 
     },
     { 
       nome: 'Headset Gamer HyperX', 
