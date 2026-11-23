@@ -144,18 +144,32 @@
         </div>
       `;
     });
-                
-                container.innerHTML += `
-                    <div class="card-produto">
-                        <div>
-                            <h3>${p.nome}</h3>
-                            <span class="tag">${p.categoria}</span>
-                        </div>
-                        <div class="preco">${valor}</div>
-                    </div>
-                `;
-            });
+                  // Renderiza os cards na tela
+      function renderizar(produtos) {
+        const container = document.getElementById("lista-produtos");
+        container.innerHTML = "";
+
+        if (produtos.length === 0) {
+          container.innerHTML = `<p style="color: var(--cinza); grid-column: 1/-1; text-align: center;">Nenhum produto encontrado.</p>`;
+          return;
         }
+
+        produtos.forEach(p => {
+          const valor = Number(p.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+          const imagemUrl = p.imagem_url || 'https://via.placeholder.com/250x150?text=Sem+Imagem';
+
+          container.innerHTML += `
+            <div class="card-produto">
+              <div>
+                <img src="${imagemUrl}" alt="${p.nome}" style="width: 100%; border-radius: 8px; margin-bottom: 15px;">
+                <h3>${p.nome}</h3>
+                <span class="tag">${p.categoria}</span>
+              </div>
+              <div class="preco">${valor}</div>
+            </div>
+          `;
+        });
+      }
 
         // Atualiza o estado dos botões de paginação
         function atualizarBotoes() {
