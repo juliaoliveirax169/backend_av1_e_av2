@@ -9,6 +9,8 @@ import comprasRoutes from './routes/compras.js';
 
 const app = express();
 app.use(express.json());
+app.use(express.static('site'));
+
 
 app.use('/cliente', clienteRoutes);
 app.use('/login', loginRoutes);
