@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQUA | Carrinho de compras</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ================= CABECALHO ================= -->
+    <header class="navbar">
+        <a class="navbar-brand" href="index.html">AQUA</a>
+        <nav class="nav-links">
+            <a class="nav-link" href="index.html">Loja</a>
+            <a class="nav-link" href="carrinho.html" title="Ir para o carrinho">🛒 Carrinho<span class="badge-carrinho" id="badge-carrinho"></span></a>
+            <span class="area-logado nav-link nome-usuario" id="usuario-nome" title=""></span>
+            <a class="area-logado avatar-usuario" id="usuario-avatar" href="perfil.html" title="Minha conta"></a>
+            <a class="area-logado nav-link" href="perfil.html">Minha Conta</a>
+            <a class="area-logado nav-link link-sair" href="#" onclick="sairConta(event)">Sair</a>
+            <span class="area-visitante nav-links">
+                <a class="nav-link" href="login.html">Entrar</a>
+                <a class="nav-link destaque" href="cadastro.html">Cadastrar</a>
+            </span>
+        </nav>
+    </header>
+    <!-- ================= VISAO DO CARRINHO ================= -->
+    <main class="container" id="visao-carrinho">
+        <div class="titulo-secao" style="margin-top: 34px;">
+            <h1>Seu Carrinho 🛒</h1>
+            <span id="resumo-contagem">0 item(ns)</span>
+        </div>
+        <!-- Lista de itens -->
+        <section class="lista-carrinho" id="lista-carrinho"></section>
+        <!-- Caixa de resumo e finalizacao -->
+        <aside class="box-resumo" id="box-resumo">
+            <div class="resumo-linha">
+                <span>Itens no carrinho</span>
+                <span id="resumo-qtd-texto">0</span>
+            </div>
+            <div class="resumo-linha">
+                <span>Frete</span>
+                <span class="texto-verde">Grátis 🎉</span>
+            </div>
+            <div class="resumo-linha total">
+                <span>Total</span>
+                <span class="valor" id="resumo-total">R$ 0,00</span>
+            </div>
+            <p class="dica_campo" id="aviso-login" style="margin-top: 12px;">
+                Você precisa estar logado para concluir a compra.
+            </p>
+            <div class="resumo-acoes">
+                <a class="btn_enviar btn_alternativo" href="index.html">Continuar comprando</a>
+                <button class="btn_enviar" id="botao-finalizar" onclick="finalizarCompra()">
+                    Finalizar compra ✔
+                </button>
+            </div>
+        </aside>
+    </main>
+    <!-- ================= TELA DE SUCESSO DA COMPRA ================= -->
+    <main class="container oculto" id="visao-sucesso">
+        <section class="caixa-sucesso">
+            <div class="circulo-ok">✓</div>
+            <h2>Compra realizada com sucesso!</h2>
+            <p>Obrigado por comprar na AQUA. Seu pedido ja foi registrado.</p>
+            <div class="detalhes-pedido">
+                <div><span>Pedido nº</span><strong id="sucesso-numero">—</strong></div>
+                <div><span>Valor total</span><strong id="sucesso-total">—</strong></div>
+                <div><span>Data</span><strong id="sucesso-data">—</strong></div>
+                <div><span>Cliente</span><strong id="sucesso-cliente">—</strong></div>
+            </div>
+            <a class="btn_enviar" href="index.html">Voltar à loja</a>
+        </section>
+    </main>
+    <footer class="rodape">
+        AQUA - E-commerce · Projeto acadêmico AV3 · Desenvolvido com HTML, CSS e JavaScript
+    </footer>
+    <script src="pages.js"></script>
+    <script>
+        const listaEl      = document.getElementById("lista-carrinho");
+        const visaoEl      = document.getElementById("visao-carrinho");
+        const sucessoEl    = document.getElementById("visao-sucesso");
+        const avisoLoginEl = document.getElementById("aviso-login");
+        /* ----------------------- Renderizacao do carrinho ----------------------- */
+        function criarThumbProduto(imagemUrl, nome) {
+            const urlMiniatura = urlImagemProduto(imagemUrl);
+            return `
+                <img class="thumb" alt="${nome}" src="${urlMiniatura}"
+                     data-original="${imagemUrl || ''}" onerror="imagemFalhou(this)">
+            `;
+        }
+        // Mesmo comportamento da tela principal: tenta original, depois placeholder
+        function imagemFalhou(img) {
+            if (!img.dataset.tentouOriginal && img.dataset.original) {
+                img.dataset.tentouOriginal = "1";
+                img.src = img.dataset.original;
+            } else {
+                img.src = 'https://placehold.co/600x450/163b38/4fd1c5?text=Sem+Imagem';
+                img.onerror = null;
+            }
+        }
+        function renderCarrinho() {
+            const itens = obterCarrinho();
+            if (!itens.length) {
+                listaEl.innerHTML = `
+                    <div class="estado-vazio">
+                        <div class="icone">🛒</div>
+                        <h2>Nenhum produto no carrinho ainda.</h2>
+                        <p class="texto-cinza" style="margin: 10px 0 22px;">Explore nossos produtos e adicione o que voce gostar.</p>
+                        <a class="btn_enviar" href="index.html">Ver produtos</a>
+                    </div>`;
+                document.getElementById("box-resumo").style.display = "none";
+            } else {
+                listaEl.innerHTML = "";
+                itens.forEach(item => {
+                    const subtotal = item.preco * item.quantidade;
+                    listaEl.insertAdjacentHTML('beforeend', `
+                        <article class="item-carrinho">
+                            ${criarThumbProduto(item.imagem_url, item.nome)}
+                            <div class="item-info">
+                                <span class="tag">${item.categoria || 'Produto'}</span>
+                                <h3>${item.nome}</h3>
+                                <p class="unitario">${formatBRL(item.preco)} por unidade</p>
+                                <div class="controle-qtd">
+                                    <button onclick="alterarQuantidade(${item.id}, -1)" title="Diminuir">−</button>
+                                    <span class="valor">${item.quantidade}</span>
+                                    <button onclick="alterarQuantidade(${item.id}, 1)" title="Aumentar">+</button>
+                                </div>
+                            </div>
+                            <div class="linha-subtotal">
+                                <span class="rotulo">Subtotal</span>
+                                <span class="valor">${formatBRL(subtotal)}</span>
+                            </div>
+                            <button class="btn-remover-item" title="Remover item"
+                                    onclick="removerItem(${item.id})">✕</button>
+                        </article>
+                    `);
+                });
+                document.getElementById("box-resumo").style.display = "";
+            }
+            atualizarTotais(itens);
+            atualizarBadgeCarrinho();
+        }
+        function atualizarTotais(itens) {
+            const qtd   = totalItensCarrinho();
+            const total = valorTotalCarrinho();
+            const lista = itens || obterCarrinho();
+            document.getElementById("resumo-contagem").textContent = `${qtd} item(ns)`;
+            document.getElementById("resumo-qtd-texto").textContent = qtd;
+            document.getElementById("resumo-total").textContent = formatBRL(total);
+            document.getElementById("resumo-total").dataset.valor = total;
+            // Aviso apenas para visitantes
+            if (avisoLoginEl) {
+                avisoLoginEl.style.display = usuarioLogado() ? "none" : "";
+            }
+        }
+        /* ----------------------- Acoes sobre o carrinho ----------------------- */
+        function alterarQuantidade(produtoId, delta) {
+            alterarQuantidadeItem(produtoId, delta);
+            renderCarrinho();
+        }
+        function removerItem(produtoId) {
+            const item = obterCarrinho().find(i => String(i.id) === String(produtoId));
+            removerDoCarrinho(produtoId);
+            renderCarrinho();
+            if (item) {
+                mostrarMensagem(`${item.nome} foi removido do carrinho.`, "info");
+            }
+        }
+        /* ----------------------- Finalizacao da compra ----------------------- */
+        async function finalizarCompra() {
+            // Protecao de rota: exige sessao ativa (JWT)
+            if (!exigirLogin()) {
+                mostrarMensagem("Faça login para concluir sua compra.", "info");
+                return;
+            }
+            const itens = obterCarrinho();
+            if (!itens.length) {
+                mostrarMensagem("Seu carrinho esta vazio.", "erro");
+                return;
+            }
+            const botao = document.getElementById("botao-finalizar");
+            botao.disabled = true;
+            botao.textContent = "Processando pagamento...";
+            const payload = {
+                produtos: itens.map(item => ({
+                    produto_id: Number(item.id),
+                    quantidade: item.quantidade
+                }))
+            };
+            try {
+                const resposta = await fetch(`${API}/compras`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...cabecalhosAutenticacao()
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const dados = await resposta.json();
+                if (resposta.status === 401) {
+                    // Token expirado ou invalido -> limpa sessao e volta ao login
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("nome_cliente");
+                    mostrarMensagem("Sessao expirada. Faca o login novamente.", "erro");
+                    setTimeout(() => window.location.replace("login.html"), 900);
+                    return;
+                }
+                if (!resposta.ok) {
+                    throw new Error(dados.msg || "Erro ao processar a compra.");
+                }
+                // Compra registrada! Agora limpamos o carrinho salvo no navegador
+                esvaziarCarrinho();
+                preencherTelaSucesso(dados, itens);
+                visaoEl.classList.add("oculto");
+                sucessoEl.classList.remove("oculto");
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (erro) {
+                console.error(erro);
+                mostrarMensagem(erro.message || "Nao foi possivel concluir a compra.", "erro");
+            } finally {
+                botao.disabled = false;
+                botao.textContent = "Finalizar compra ✔";
+            }
+        }
+        function preencherTelaSucesso(dados, itensComprados) {
+            document.getElementById("sucesso-numero").textContent = `#${dados.compra_id}`;
+            document.getElementById("sucesso-total").textContent = formatBRL(dados.valor_total);
+            document.getElementById("sucesso-data").textContent = new Date().toLocaleString('pt-BR');
+            document.getElementById("sucesso-cliente").textContent =
+                localStorage.getItem("nome_cliente") || "-";
+            // Guarda tambem na sessao para consulta rapida depois
+            sessionStorage.setItem("ultimo_pedido", JSON.stringify({
+                id: dados.compra_id,
+                total: dados.valor_total,
+                itens: itensComprados
+            }));
+        }
+        /* ----------------------- Inicializacao ----------------------- */
+        window.onload = () => {
+            iniciarInterfaceUsuario();
+            renderCarrinho();
+        };
+    </script>
+</body>
+</html>
