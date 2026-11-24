@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQUA | Entrar na conta</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ================= CABECALHO SIMPLIFICADO ================= -->
+    <header class="navbar">
+        <a class="navbar-brand" href="index.html">AQUA</a>
+        <nav class="nav-links">
+            <span class="area-visitante nav-links">
+                <a class="nav-link destaque" href="cadastro.html">Criar conta</a>
+            </span>
+            <a class="area-logado nav-link" href="index.html">Voltar à loja</a>
+            <a class="area-logado nav-link link-sair" href="#" onclick="sairConta(event)">Sair</a>
+            <a class="nav-link" href="carrinho.html" title="Carrinho">🛒 Carrinho<span class="badge-carrinho"></span></a>
+        </nav>
+    </header>
+    <!-- ================= FORMULARIO DE LOGIN ================= -->
+    <main class="autenticacao-wrapper">
+        <section class="caixa-autenticacao">
+            <div class="logo-redondo">A</div>
+            <h1>Bem-vindo(a) de volta!</h1>
+            <p>Faca login para comprar e acompanhar seus pedidos.</p>
+            <form class="formulario-autenticacao" id="form-login" onsubmit="enviarLogin(event)">
+                <div class="campo">
+                    <label for="email">Email cadastrado</label>
+                    <input type="email" id="email" class="input_texto" placeholder="seu@email.com"
+                           autocomplete="email" required>
+                </div>
+                <div class="campo">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" class="input_texto" placeholder="Digite sua senha"
+                           autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn_enviar" id="botao-entrar">Entrar</button>
+            </form>
+            <p class="mensagem-roda">Nao tem uma conta ainda?
+                <a href="cadastro.html">Cadastre-se gratuitamente</a>
+            </p>
+        </section>
+    </main>
+    <footer class="rodape">
+        AQUA - E-commerce · Projeto acadêmico AV3
+    </footer>
+    <script src="pages.js"></script>
+    <script>
+        // Marca o campo com erro visualmente
+        function marcarErro(idCampo) {
+            const campo = document.getElementById(idCampo);
+            if (!campo) return;
+            campo.classList.add("entrada-invalida");
+            setTimeout(() => campo.classList.remove("entrada-invalida"), 3000);
+        }
+        async function enviarLogin(event) {
+            event.preventDefault();
+            const emailEl = document.getElementById("email");
+            const senhaEl = document.getElementById("senha");
+            const botao   = document.getElementById("botao-entrar");
+            const email = emailEl.value.trim();
+            const senha = senhaEl.value;
+            if (!email || !senha) {
+                if (!email) marcarErro("email");
+                if (!senha) marcarErro("senha");
+                mostrarMensagem("Preencha o email e a senha.", "erro");
+                return;
+            }
+            botao.disabled = true;
+            botao.textContent = "Entrando...";
+            try {
+                const resposta = await fetch(`${API}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: email, senha: senha })
+                });
+                const dados = await resposta.json();
+                if (!resposta.ok) {
+                    throw new Error(dados.msg || "Falha ao fazer login.");
+                }
+                // Guarda os dados do usuario (exigencia da AV1/AV3)
+                localStorage.setItem("token", dados.token);
+                localStorage.setItem("nome_cliente", dados.nome);
+                mostraMensagemSucesso(`Ola, ${dados.nome.split(' ')[0]}! Login realizado.`);
+                // Volta para a pagina que originou o acesso (ex.: finalizar compra) ou para a loja
+                const rotaVolta = sessionStorage.getItem("rota_volta") || "index.html";
+                sessionStorage.removeItem("rota_volta");
+                setTimeout(() => {
+                    window.location.replace(rotaVolta);
+                }, 700);
+            } catch (erro) {
+                console.error(erro);
+                mostrarMensagem(erro.message || "Erro ao fazer login.", "erro");
+                botao.disabled = false;
+                botao.textContent = "Entrar";
+            }
+        }
+        function mostraMensagemSucesso(texto) {
+            mostrarMensagem(texto, "sucesso");
+        }
+        // Se ja esta logado, nao faz sentido ficar nesta pagina
+        window.onload = () => {
+            iniciarInterfaceUsuario();
+            if (usuarioLogado()) {
+                const rotaVolta = sessionStorage.getItem("rota_volta") || "index.html";
+                window.location.replace(rotaVolta);
+            }
+        };
+    </script>
+</body>
+</html>
