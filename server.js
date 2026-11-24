@@ -9,7 +9,15 @@ import comprasRoutes from './routes/compras.js';
 
 const app = express();
 app.use(express.json());
-app.use(express.static('site'));
+// Libera o acesso do front-end em outra porta (ex.: Live Server)
+app.use((req, res, next) => {
+    const origem = req.headers.origin || '*';
+    res.setHeader('Access-Control-Allow-Origin', origem);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+});
 
 
 app.use('/cliente', clienteRoutes);
