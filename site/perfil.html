@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQUA | Minha conta</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ================= CABECALHO ================= -->
+    <header class="navbar">
+        <a class="navbar-brand" href="index.html">AQUA</a>
+        <nav class="nav-links">
+            <a class="nav-link" href="index.html">Loja</a>
+            <a class="nav-link" href="carrinho.html" title="Ir para o carrinho">🛒 Carrinho<span class="badge-carrinho" id="badge-carrinho"></span></a>
+            <span class="area-logado nav-link nome-usuario" id="usuario-nome" title=""></span>
+            <a class="area-logado avatar-usuario" id="usuario-avatar" href="perfil.html" title="Minha conta"></a>
+            <a class="area-logado nav-link link-sair" href="#" onclick="sairConta(event)">Sair</a>
+            <span class="area-visitante nav-links">
+                <a class="nav-link" href="login.html">Entrar</a>
+                <a class="nav-link destaque" href="cadastro.html">Cadastrar</a>
+            </span>
+        </nav>
+    </header>
+    <!-- ================= AREA LOGADA DO USUARIO ================= -->
+    <main class="container" style="padding-top: 34px;">
+        <div class="titulo-secao">
+            <h1>Minha Conta 👤</h1>
+            <span class="texto-cinza">Dados pessoais e historico de compras</span>
+        </div>
+        <!-- Dados cadastrais -->
+        <section class="painel-conta">
+            <h2>Dados cadastrais</h2>
+            <div id="perfil-info">
+                <p class="texto-cinza">Carregando seus dados...</p>
+            </div>
+        </section>
+        <!-- Historico de compras -->
+        <section class="painel-conta">
+            <h2>Meus pedidos 🧾</h2>
+            <div id="historico-compras">
+                <p class="texto-cinza">Carregando seus pedidos...</p>
+            </div>
+        </section>
+        <div style="display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap;">
+            <a class="btn_enviar btn_alternativo" href="index.html">Continuar comprando</a>
+            <button class="btn_vermelho btn_enviar" onclick="logout()">Sair da minha conta</button>
+        </div>
+    </main>
+    <footer class="rodape">
+        AQUA - E-commerce · Projeto acadêmico AV3
+    </footer>
+    <script src="pages.js"></script>
+    <script>
+        window.onload = () => {
+            // Pagina protegida: redireciona visitantes para o login
+            if (!exigirLogin()) return;
+            iniciarInterfaceUsuario();
+            carregarPerfil();
+            carregarHistoricoCompras("historico-compras");
+        };
+    </script>
+</body>
+</html>
