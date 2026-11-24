@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQUA | Loja de Produtos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ================= CABECALHO ================= -->
+    <header class="navbar">
+        <a class="navbar-brand" href="index.html">AQUA</a>
+        <nav class="nav-links">
+            <a class="nav-link" href="carrinho.html" title="Ir para o carrinho">
+                🛒 Carrinho
+                <span class="badge-carrinho" id="badge-carrinho"></span>
+            </a>
+            <!-- Area do usuario logado -->
+            <span class="area-logado nav-link nome-usuario" id="usuario-nome" title=""></span>
+            <a class="area-logado avatar-usuario" id="usuario-avatar" href="perfil.html" title="Minha conta"></a>
+            <a class="area-logado nav-link" href="perfil.html">Minha Conta</a>
+            <a class="area-logado nav-link link-sair" href="#" onclick="sairConta(event)">Sair</a>
+            <!-- Links para quem ainda nao fez login -->
+            <span class="area-visitante nav-links">
+                <a class="nav-link" href="login.html">Entrar</a>
+                <a class="nav-link destaque" href="cadastro.html">Cadastrar</a>
+            </span>
+        </nav>
+    </header>
+    <!-- ================= HERO (faixa de boas-vindas) ================= -->
+    <section class="hero">
+        <h1>Bem-vindo à <span>AQUA</span></h1>
+        <p>Tecnologia, audio e perifericos com os melhores precos.</p>
+        <div class="acoes">
+            <a class="btn_enviar" href="#produtos">Ver produtos</a>
+            <a class="btn_enviar btn_alternativo" href="carrinho.html">🛒 Meu Carrinho</a>
+        </div>
+    </section>
+    <!-- ================= PRODUTOS ================= -->
+    <main class="container" id="produtos">
+        <div class="titulo-secao">
+            <h2>Nossos Produtos</h2>
+            <span id="resumo-busca"></span>
+        </div>
+        <!-- Filtros (busca por nome, categoria, preco e ordenacao) -->
+        <section class="filtros-container">
+            <div class="campo">
+                <label for="f-nome">Buscar</label>
+                <input type="text" id="f-nome" class="input_texto" placeholder="Ex.: smartwatch">
+            </div>
+            <div class="campo">
+                <label for="f-categoria">Categoria</label>
+                <select id="f-categoria" class="input_texto">
+                    <option value="">Todas</option>
+                    <option value="smartphone">Smartphone</option>
+                    <option value="audio">Áudio</option>
+                    <option value="tv">TV</option>
+                    <option value="monitor">Monitor</option>
+                    <option value="periferico">Periférico</option>
+                    <option value="fotografia">Fotografia</option>
+                    <option value="wearable">Wearable</option>
+                    <option value="e-reader">E-reader</option>
+                </select>
+            </div>
+            <div class="campo">
+                <label for="f-preco-min">Preço mín.</label>
+                <input type="number" id="f-preco-min" class="input_texto" placeholder="R$ 0" min="0" step="1">
+            </div>
+            <div class="campo">
+                <label for="f-preco-max">Preço máx.</label>
+                <input type="number" id="f-preco-max" class="input_texto" placeholder="R$ 99999" min="0" step="1">
+            </div>
+            <div class="campo">
+                <label for="f-ordem">Ordenar por</label>
+                <select id="f-ordem" class="input_texto">
+                    <option value="">Padrão</option>
+                    <option value="menor">Menor preço</option>
+                    <option value="maior">Maior preço</option>
+                </select>
+            </div>
+            <button class="btn_enviar" onclick="buscarProdutos(1)">Aplicar filtros</button>
+        </section>
+        <!-- Grade de produtos (montada pelo JavaScript) -->
+        <section class="grid-produtos" id="grade-produtos">
+            <p class="texto-cinza" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                Carregando produtos do servidor...
+            </p>
+        </section>
+        <!-- Paginacao -->
+        <footer class="paginacao">
+            <button class="btn_enviar" id="btn-anterior" onclick="mudarPagina(-1)">&larr; Anterior</button>
+            <span class="texto-cinza" id="info-pagina">Página 1 de 1</span>
+            <button class="btn_enviar" id="btn-proxima" onclick="mudarPagina(1)">Próxima &rarr;</button>
+        </footer>
+    </main>
+    <!-- ================= MINI CARRINHO FLUTUANTE ================= -->
+    <aside class="mini-carrinho" id="mini-carrinho">
+        <span style="font-size: 26px;">🛍️</span>
+        <div class="info">
+            <strong id="mini-carrinho-valor">R$ 0,00</strong>
+            <small id="mini-carrinho-qtd">0 item(ns)</small>
+        </div>
+        <a class="btn_enviar" href="carrinho.html" style="padding: 10px 18px;">Ir ao carrinho</a>
+    </aside>
+    <footer class="rodape">
+        AQUA - E-commerce · Projeto acadêmico AV3 · Desenvolvido com HTML, CSS e JavaScript
+    </footer>
+    <!-- Scripts compartilhados + logica desta pagina -->
+    <script src="pages.js"></script>
+    <script>
+        // Estado local da pagina de loja
+        let paginaAtual = 1;
+        const gradeEl   = document.getElementById("grade-produtos");
+        const infoPaginaEl = document.getElementById("info-pagina");
+        const btnAnteriorEl = document.getElementById("btn-anterior");
+        const btnProximaEl  = document.getElementById("btn-proxima");
+        const resumoBuscaEl = document.getElementById("resumo-busca");
+        /* ----------------------- Renderizacao dos cards ----------------------- */
+        function criarCardProduto(produto) {
+            const card = document.createElement("article");
+            card.className = "card-produto";
+            const urlMiniatura = urlImagemProduto(produto.imagem_url);
+            card.innerHTML = `
+                <img class="foto" alt="${produto.nome}" loading="lazy"
+                     src="${urlMiniatura}" data-original="${produto.imagem_url || ''}"
+                     onerror="imagemFalhou(this)">
+                <span class="tag">${produto.categoria}</span>
+                <h3>${produto.nome}</h3>
+                <p class="preco">${formatBRL(produto.preco)}</p>
+                <div class="rodape-card">
+                    <input type="number" class="qtd-input-mini" min="1" max="99" value="1"
+                           id="qtd-${produto.id}" aria-label="Quantidade desejada">
+                    <button class="btn-adicionar" onclick="adicionarItem(${produto.id})">
+                        + Adicionar
+                    </button>
+                </div>
+            `;
+            return card;
+        }
+        // Fallback em dois niveis: tenta o link original, depois mostra aviso
+        function imagemFalhou(img) {
+            if (!img.dataset.tentouOriginal && img.dataset.original) {
+                img.dataset.tentouOriginal = "1";
+                img.src = img.dataset.original;
+            } else {
+                img.src = 'https://placehold.co/600x450/163b38/4fd1c5?text=Sem+Imagem';
+                img.onerror = null;
+            }
+        }
+        /* ----------------------- Acoes do carrinho na loja ----------------------- */
+        function adicionarItem(produtoId) {
+            // Busca no cache local desta pagina (evita nova requisição)
+            const produto = _cacheProdutos.find(p => String(p.id) === String(produtoId));
+            if (!produto) return;
+            const inputQtd = document.getElementById(`qtd-${produtoId}`);
+            let qtd = parseInt(inputQtd ? inputQtd.value : 1, 10);
+            if (isNaN(qtd) || qtd < 1) qtd = 1;
+            if (qtd > 99) qtd = 99;
+            if (inputQtd) inputQtd.value = qtd;
+            adicionarAoCarrinho(produto, qtd);
+            const botao = inputQtd ? inputQtd.parentElement.querySelector('.btn-adicionar') : null;
+            if (botao) {
+                const textoOriginal = botao.textContent;
+                botao.classList.add('adicionado');
+                botao.textContent = 'Adicionado ✓';
+                setTimeout(() => {
+                    botao.classList.remove('adicionado');
+                    botao.textContent = textoOriginal;
+                }, 1200);
+            }
+            mostrarMensagem(`${produto.nome} (${qtd}x) adicionado ao carrinho!`, "sucesso");
+            if (!usuarioLogado()) {
+                mostrarMensagem("Dica: faça login para poder finalizar sua compra.", "info");
+            }
+            atualizarMiniCarrinho();
+        }
+        // Mostra/esconde o mini-carrinho flutuante
+        function atualizarMiniCarrinho() {
+            const caixa = document.getElementById("mini-carrinho");
+            const temItens = totalItensCarrinho() > 0;
+            if (caixa) {
+                caixa.classList.toggle('visivel', temItens);
+            }
+        }
+        /* ----------------------- Busca / filtragem ----------------------- */
+        let _cacheProdutos = []; // produtos da pagina atual (usados no add-to-cart)
+        async function buscarProdutos(pagina) {
+            if (pagina !== undefined) paginaAtual = pagina;
+            const parametros = new URLSearchParams();
+            const nome     = document.getElementById("f-nome").value.trim();
+            const categoria = document.getElementById("f-categoria").value;
+            const precoMin = document.getElementById("f-preco-min").value;
+            const precoMax = document.getElementById("f-preco-max").value;
+            const ordem    = document.getElementById("f-ordem").value;
+            if (nome)      parametros.set("nome", nome);
+            if (categoria) parametros.set("categoria", categoria);
+            if (precoMin)  parametros.set("preco_min", precoMin);
+            if (precoMax)  parametros.set("preco_max", precoMax);
+            if (ordem)     parametros.set("ordem", ordem);
+            parametros.set("pagina", paginaAtual);
+            gradeEl.innerHTML = `<p class="texto-cinza" style="grid-column: 1/-1; text-align:center; padding:40px;">Carregando...</p>`;
+            try {
+                const resposta = await fetch(`${API}/produto?${parametros.toString()}`);
+                if (!resposta.ok) throw new Error("Erro ao carregar produtos.");
+                const dados = await resposta.json();
+                const produtos = dados.dados || [];
+                if (dados.meta) {
+                    paginaAtual = dados.meta.pagina_atual || paginaAtual;
+                    const totalPaginas = dados.meta.total_paginas || 1;
+                    infoPaginaEl.textContent = `Página ${paginaAtual} de ${totalPaginas} · ${dados.meta.total_encontrados} produto(s)`;
+                    btnAnteriorEl.disabled = paginaAtual <= 1;
+                    btnProximaEl.disabled  = paginaAtual >= totalPaginas;
+                    resumoBuscaEl.textContent = `${dados.meta.total_encontrados} resultado(s) encontrados`;
+                }
+                if (!produtos.length) {
+                    gradeEl.innerHTML = `<p class="texto-cinza" style="grid-column: 1/-1; text-align:center; padding:40px;">Nenhum produto encontrado com esses filtros. 😕</p>`;
+                    _cacheProdutos = [];
+                    return;
+                }
+                gradeEl.innerHTML = "";
+                _cacheProdutos = produtos;
+                produtos.forEach(p => gradeEl.appendChild(criarCardProduto(p)));
+                // Reposiciona a paginacao no fim dos cards
+                const paginacao = document.querySelector(".paginacao");
+                if (paginacao) paginacao.style.marginTop = "40px";
+            } catch (erro) {
+                console.error(erro);
+                gradeEl.innerHTML = `<p class="texto-erro" style="grid-column: 1/-1; text-align:center; padding:40px;">Não foi possível carregar os produtos. O servidor da API está rodando?</p>`;
+                mostrarMensagem("Falha ao comunicar com o servidor.", "erro");
+            }
+        }
+        function mudarPagina(delta) {
+            buscarProdutos(paginaAtual + delta);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        /* ----------------------- Inicializacao ----------------------- */
+        // Atalho: Enter aplica os filtros (voltando para a primeira pagina)
+        document.addEventListener("keydown", e => {
+            if (e.key === "Enter" && e.target.closest(".filtros-container")) {
+                e.preventDefault();
+                buscarProdutos(1);
+            }
+        });
+        window.onload = () => {
+            iniciarInterfaceUsuario();
+            atualizarMiniCarrinho();
+            buscarProdutos(1);
+        };
+    </script>
+</body>
+</html>
